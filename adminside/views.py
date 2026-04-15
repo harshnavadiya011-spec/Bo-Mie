@@ -133,12 +133,12 @@ class AdminTokenRefreshAPIView(APIView):
     permission_classes = []
 
     def post(self, request):
-        raw_refresh = request.headers.get("X-Refresh-Token", "")
+        raw_refresh = request.headers.get("Authorization", "")
         refresh_token = self._extract_token(raw_refresh)
 
         if not refresh_token:
             return Response(
-                {"detail": "Provide refresh token in X-Refresh-Token header."},
+                {"detail": "Provide refresh token in Authorization header."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -162,12 +162,12 @@ class AdminLogoutAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        raw_refresh = request.headers.get("X-Refresh-Token", "")
+        raw_refresh = request.headers.get("Authorization", "")
         refresh_token = AdminTokenRefreshAPIView._extract_token(raw_refresh)
 
         if not refresh_token:
             return Response(
-                {"detail": "Provide refresh token in X-Refresh-Token header."},
+                {"detail": "Provide refresh token in Authorization header."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -218,21 +218,6 @@ class AdminChangePasswordAPIView(APIView):
     def post(self, request):
         serializer = AdminChangePasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        uid = serializer.validated_data["uid"]
-        token = serializer.validated_data["token"]
-
-        try:
-            admin_id = force_str(urlsafe_base64_decode(uid))
-            admin = Admin.objects.get(pk=admin_id, deleted_at__isnull=True)
-        except (TypeError, ValueError, OverflowError, Admin.DoesNotExist):
-            return Response({"detail": "Invalid reset link."}, status=status.HTTP_400_BAD_REQUEST)
-
-        if not default_token_generator.check_token(admin, token):
-            return Response({"detail": "Invalid or expired reset token."}, status=status.HTTP_400_BAD_REQUEST)
-
-        admin.set_password(serializer.validated_data["new_password"])
-        admin.save(update_fields=["password", "updated_at"])
 
         return Response({"detail": "Password changed successfully."}, status=status.HTTP_200_OK)
 

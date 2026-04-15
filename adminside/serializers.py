@@ -96,9 +96,9 @@ class AdminForgotPasswordSerializer(serializers.Serializer):
 
 
 class AdminChangePasswordSerializer(serializers.Serializer):
-    uid = serializers.CharField()
-    token = serializers.CharField()
+    password = serializers.CharField()
     new_password = serializers.CharField()
+    confirm_password = serializers.CharField()
 
 class AdminLogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
